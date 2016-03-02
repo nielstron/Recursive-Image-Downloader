@@ -13,4 +13,4 @@ folderpath - This takes the Download Location (BY DEFAULT, TAKES THE SCRIPT LOCA
 url - Starting/Root URL
 level - Depth of traversal of the URL (BY DEFAULT, LEVEL = 0 For The Root
 FromSameDomain - True(By default) if all the image url will be from same domain as that of entered URL
-                False if all the links will be incuded irrespective of the domain
+                 False if all the links will be incuded irrespective of the domain
