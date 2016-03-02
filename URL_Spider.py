@@ -57,7 +57,7 @@ def DownloadImages(folderpath,url, level=0,FromSameDomain=True): # the root URL 
 				downloadImages(os.path.join(folderpath,title),linkUrl, level - 1)
 
 # main
-url = 'http://www.google.co.in/
+url = 'http://www.google.co.in/'
 startpath = os.path.dirname(os.path.abspath(__file__))
 
 DownloadImages(startpath,url, 40)
