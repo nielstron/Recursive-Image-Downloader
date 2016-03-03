@@ -21,7 +21,7 @@ def DownloadImages(folderpath,url, level=0,FromSameDomain=True): # the root URL 
 	urlList.append(url)
 	if FromSameDomain:
 		for url in urlList[:]:
-			if url.startswith(domainName):
+			if not url.startswith(domainName):
 				urlList.remove(url)
 	try:
 		urlContent = urllib2.urlopen(url).read()
