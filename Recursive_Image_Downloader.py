@@ -18,6 +18,8 @@ keepcharacters = (" ", ".", "_", "-")
 
 # don't touch anything below here
 
+_ROOT_URL_SPLIT = urlsplit(ROOT_URL)
+ROOT_URL_DOMAIN = f"{_ROOT_URL_SPLIT[0]}://{_ROOT_URL_SPLIT[1]}"
 URL_LIST = set()
 
 # as taken from https://stackoverflow.com/a/7406369
@@ -77,9 +79,9 @@ def download(
     if url in URL_LIST:  # prevent using the same URL again
         return
     print(f"Downloading From : {url}")
-    parts = url.split("//", 1)
-    domain_name = parts[0] + "//" + parts[1].split("/", 1)[0]
-    if same_domain and not url.startswith(ROOT_URL):
+    parts = urlsplit(url)
+    domain = parts[0] + "//" + parts[1]
+    if same_domain and not domain == ROOT_URL_DOMAIN:
         print("Different domain, skipping")
         return
     URL_LIST.add(url)
@@ -99,7 +101,7 @@ def download(
     # find and download all images
     for img_url in url_content.img_urls:
         try:
-            img_url = anchor(img_url, domain_name)
+            img_url = anchor(img_url, url)
             img_data = urllib2.urlopen(img_url).read()
             file_name = clean(basename(urlsplit(img_url)[2]))
             final_path = os.path.join(folderpath, title, file_name)
@@ -118,7 +120,7 @@ def download(
         link_urls = url_content.next_urls
         for link_url in link_urls:
             download(
-                os.path.join(folderpath, title), anchor(link_url, domain_name), level - 1
+                os.path.join(folderpath, title), anchor(link_url, url), level - 1
             )
 
 
