@@ -1,4 +1,4 @@
-# imageDownloader.py
+#! /usr/env/python
 # Finds and downloads all images from any given URL recursively.
 import os
 from os.path import basename
