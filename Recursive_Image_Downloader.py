@@ -9,7 +9,7 @@ from html.parser import HTMLParser
 # Touch variable name below here
 
 # As explained in Readme
-ROOT_URL = "http://www.google.co.in"
+ROOT_URL = "https://www.ion-products.com/de/bike/men/mtb-bekleidung/"
 ONLY_SAME_DOMAIN = True
 MAX_RECURSION_LEVEL = 10
 
@@ -25,10 +25,13 @@ def clean(filename):
     return "".join(c for c in filename if c.isalnum() or c in keepcharacters).rstrip()
 
 
-def anchor(url, domainBase):
+def anchor(url, root):
     # TODO handle case of relative path
+    split = urlsplit(root)
     if url.startswith("/"):
-        return domainBase + url
+        return f"{split[0]}://{split[1]}{url}"
+    if not "//" in url:
+        return f"{split[0]}://{split[1]}/{split[2]}/{url}"
     return url
 
 
@@ -108,7 +111,7 @@ def download(
             else:
                 print("Image already exists... Skipping...")
         except Exception as e:
-            print(f"Error: could not read {img_url}: {e}")
+            print(f"Error: could not read image {img_url}: {e}")
 
     # if there are links on the webpage then recursively repeat
     if level > 0:
