@@ -30,10 +30,8 @@ def clean(filename):
 def anchor(url, root):
     # TODO handle case of relative path
     split = urlsplit(root)
-    if url.startswith("/"):
-        return f"{split[0]}://{split[1]}{url}"
     if not "//" in url:
-        return f"{split[0]}://{split[1]}/{split[2]}/{url}"
+        return f"{split[0]}://{split[1]}{url}"
     return url
 
 
@@ -80,7 +78,7 @@ def download(
         return
     print(f"Downloading From : {url}")
     parts = urlsplit(url)
-    domain = parts[0] + "//" + parts[1]
+    domain = f"{parts[0]}://{parts[1]}"
     if same_domain and not domain == ROOT_URL_DOMAIN:
         print("Different domain, skipping")
         return
@@ -102,13 +100,13 @@ def download(
     for img_url in url_content.img_urls:
         try:
             img_url = anchor(img_url, url)
-            img_data = urllib2.urlopen(img_url).read()
+            # img_data = urllib2.urlopen(img_url).read()
             file_name = clean(basename(urlsplit(img_url)[2]))
             final_path = os.path.join(folderpath, title, file_name)
             if not os.path.isfile(final_path):
                 print(f"Downloading Image : {img_url} to {final_path}")
-                with open(final_path, "wb") as output:
-                    output.write(img_data)
+                #with open(final_path, "wb") as output:
+                #    output.write(img_data)
                 print(f"File saved in : {final_path}")
             else:
                 print("Image already exists... Skipping...")
