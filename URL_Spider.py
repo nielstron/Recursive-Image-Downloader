@@ -93,7 +93,8 @@ def downloadImages(
     # find and download all images
     for imgUrl in urlContent.imgUrls:
         try:
-            imgData = urllib2.urlopen(anchor(imgUrl, domainName)).read()
+            imgUrl = anchor(imgUrl, domainName)
+            imgData = urllib2.urlopen(imgUrl).read()
             fileName = clean(basename(urlsplit(imgUrl)[2]))
             finalpath = os.path.join(folderpath, title, fileName)
             if not os.path.isfile(finalpath):
