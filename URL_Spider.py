@@ -1,18 +1,26 @@
 # imageDownloader.py
 # Finds and downloads all images from any given URL recursively.
-# FB - 201009083
-import re
 import os
 from os.path import basename
 from urllib import request as urllib2
 from urllib.parse import urlsplit
 from html.parser import HTMLParser
 
+# Touch variable name below here
+
+# As explained in Readme
+rootUrl = "http://www.google.co.in"
+onlySameDomain = True
+maxRecursionLevel = 10
+
+# Characters to be kept when creating filenames (avoiding issues in Windows based OSs)
+keepcharacters = (' ', '.', '_', "-")
+
+# don't touch anything below here
+
 urlList = set()
 
 # as taken from https://stackoverflow.com/a/7406369
-keepcharacters = (' ', '.', '_', "-")
-
 def clean(filename):
     return "".join(c for c in filename if c.isalnum() or c in keepcharacters).rstrip()
 
@@ -107,11 +115,10 @@ def downloadImages(
 
 # main
 if __name__ == '__main__':
-    rootUrl = "http://www.google.co.in"
     startpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "files")
     try:
         os.mkdir(startpath)
     except FileExistsError:
         pass
 
-    downloadImages(startpath, rootUrl, 40)
+    downloadImages(startpath, rootUrl, 10, onlySameDomain)

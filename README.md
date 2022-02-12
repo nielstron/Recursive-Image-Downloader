@@ -1,16 +1,14 @@
 # Recursive-Image-Downloader
-It download all images from a single URL Or recursively download all images from all links in the URL
 
-This program download all the images from a single link (level =0)  
-OR  
-It can download images from all url present in the link depending on the (level > 0)  
+Downloads all images from a single URL Or recursively downloads all images from all links in the URL.
+It follows links recursively up to the level specified.
 
-FUNCTION NAME:  
-**DownloadImages**  
+Make sure you installed [Python3](https://python.org).
+Modify the variables in `URL_Spider.py` to change the behaviour.
 
-##Parameters:  
-**folderpath - This takes the Download Location (BY DEFAULT, TAKES THE SCRIPT LOCATION  
-url - Starting/Root URL  
-level - Depth of traversal of the URL (BY DEFAULT, LEVEL = 0 For The Root  
-FromSameDomain - True(By default) if all the image url will be from same domain as that of entered URL  
+rootUrl - Starting/Root URL  
+maxRecursionLevel - Depth of traversal of the URL (10 by default, 0 means only the given domain is parsed)
+onlySameDomain - True(By default) if all the image url will be from same domain as that of entered URL  
                  False if all the links will be incuded irrespective of the domain
+
+Stores all results in the folder `files`.
