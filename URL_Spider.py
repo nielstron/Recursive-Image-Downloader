@@ -1,63 +1,117 @@
 # imageDownloader.py
 # Finds and downloads all images from any given URL recursively.
 # FB - 201009083
-import urllib2
 import re
 import os
 from os.path import basename
-from urlparse import urlsplit
+from urllib import request as urllib2
+from urllib.parse import urlsplit
+from html.parser import HTMLParser
 
-global urlList
-urlList = []
+urlList = set()
+
+# as taken from https://stackoverflow.com/a/7406369
+keepcharacters = (' ', '.', '_', "-")
+
+def clean(filename):
+    return "".join(c for c in filename if c.isalnum() or c in keepcharacters).rstrip()
+
+def anchor(url, domainBase):
+    # TODO handle case of relative path
+    if url.startswith("/"):
+        return domainBase + url
+    return url
+
+def fixtag(tagmatch: str):
+    """ Reduces a string to the first occurence of a quote (fixes greedy regex) """
+    if "\"" in tagmatch:
+        return tagmatch[:tagmatch.index("\"")]
+    return tagmatch
+
+class ImageExtractHTMLParser(HTMLParser):
+    title = None
+    imgUrls = []
+    nextUrls = []
+    _title_tag = False
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "title":
+            self._title_tag = True
+        if tag == "img":
+            for attrk, attrv in attrs:
+                if attrk == "src":
+                    self.imgUrls.append(attrv)
+        if tag == "a":
+            for attrk, attrv in attrs:
+                if attrk == "href":
+                    self.nextUrls.append(attrv)
+
+    def handle_endtag(self, tag):
+        if tag == "title":
+            self._title_tag = False
+
+    def handle_data(self, data):
+        if self._title_tag:
+            self.title = data
 
 # recursively download images starting from the root URL
-def DownloadImages(folderpath,url, level=0,FromSameDomain=True): # the root URL is level 0
-	print "Downloading From : %s" % (url)
-	global urlList
-	parts = url.split('//', 1)
-	domainName = parts[0]+'//'+parts[1].split('/', 1)[0]
-	if url in urlList: # prevent using the same URL again
-		return
-	urlList.append(url)
-	if FromSameDomain:
-		for url in urlList[:]:
-			if not url.startswith(domainName):
-				urlList.remove(url)
-	try:
-		urlContent = urllib2.urlopen(url).read()
-	except:
-		return
-	title = str(urlContent).split('<title>')[1].split('</title>')[0]
-	#folderpath=os.path.join(os.path.dirname(os.path.abspath(__file__)),str(urlContent).split('<title>')[1].split('</title>')[0])
-	print("Creating Directory : %s\n"% (title))
-	os.mkdir(os.path.join(folderpath,title))
-	#find and download all images
-	imgUrls = re.findall('<img .*?src="(.*?)"', urlContent)
-	for imgUrl in imgUrls:
-		try:
-			imgData = urllib2.urlopen(imgUrl).read()
-			finalpath = os.path.join(folderpath,title)
-			fileName = basename(urlsplit(imgUrl)[2])
-			if not os.path.isfile(os.path.join(finalpath,fileName)):
-				print "Downloading Image : %s"%(imgUrl)
-				output = open(os.path.join(finalpath,fileName),"wb")
-				output.write(imgData)
-				output.close()
-				print "File saved in : %s\n"%(os.path.join(finalpath,fileName))
-			else:
-				print "IMAGE ALREADY EXISTS... Skipping..."
-		except:
-			pass
+def downloadImages(
+    folderpath, url, level=0, FromSameDomain=True
+):  # the root URL is level 0
+    global urlList
+    if url in urlList:  # prevent using the same URL again
+        return
+    print(f"Downloading From : {url}")
+    parts = url.split("//", 1)
+    domainName = parts[0] + "//" + parts[1].split("/", 1)[0]
+    if FromSameDomain and not url.startswith(rootUrl):
+        print("Different domain, skipping")
+        return
+    urlList.add(url)
+    try:
+        urlContentRaw = urllib2.urlopen(url).read().decode("utf8", errors="ignore")
+    except Exception as e:
+        print(f"Error: could not read {url}: {e}")
+        return
+    urlContent = ImageExtractHTMLParser()
+    urlContent.feed(urlContentRaw)
+    title = clean(urlContent.title)
+    # folderpath=os.path.join(os.path.dirname(os.path.abspath(__file__)),str(urlContent).split('<title>')[1].split('</title>')[0])
+    print(f"Creating Directory : {title}")
+    try:
+        os.mkdir(os.path.join(folderpath, title))
+    except FileExistsError:
+        pass
+    # find and download all images
+    for imgUrl in urlContent.imgUrls:
+        try:
+            imgData = urllib2.urlopen(anchor(imgUrl, domainName)).read()
+            fileName = clean(basename(urlsplit(imgUrl)[2]))
+            finalpath = os.path.join(folderpath, title, fileName)
+            if not os.path.isfile(finalpath):
+                print(f"Downloading Image : {imgUrl} to {finalpath}")
+                with open(finalpath, "wb") as output:
+                    output.write(imgData)
+                print(f"File saved in : {finalpath}")
+            else:
+                print("Image already exists... Skipping...")
+        except Exception as e:
+            print(f"Error: could not read {imgUrl}: {e}")
 
-	# if there are links on the webpage then recursively repeat
-	if level > 0:
-		linkUrls = re.findall('<a .*?href="(.*?)"', urlContent)
-		if len(linkUrls) > 0:
-			for linkUrl in linkUrls:
-				downloadImages(os.path.join(folderpath,title),linkUrl, level - 1)
+    # if there are links on the webpage then recursively repeat
+    if level > 0:
+        linkUrls = urlContent.nextUrls
+        for linkUrl in linkUrls:
+            downloadImages(os.path.join(folderpath, title), anchor(linkUrl, domainName), level - 1)
+
 
 # main
-url = 'http://www.google.co.in/'
-startpath = os.path.dirname(os.path.abspath(__file__))
+if __name__ == '__main__':
+    rootUrl = "http://www.google.co.in"
+    startpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "files")
+    try:
+        os.mkdir(startpath)
+    except FileExistsError:
+        pass
 
-DownloadImages(startpath,url, 40)
+    downloadImages(startpath, rootUrl, 40)
