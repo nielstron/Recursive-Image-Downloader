@@ -4,6 +4,7 @@ Downloads all images from a single URL Or recursively downloads all images from 
 It follows links recursively up to the level specified.
 
 Make sure you installed [Python3](https://python.org).
+Yes that's right, no additional dependencies. Windows compatible (No guarantees whatsoever).
 Modify the variables in `URL_Spider.py` to change the behaviour.
 
 rootUrl - Starting/Root URL  
